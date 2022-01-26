@@ -24,7 +24,8 @@ for dir in sorted(os.listdir()):
             if "]" in b:
                 e-=b.count("]")
             if c==2 and e==2:
-                a+=b[17:-2]+"	"
+                a+=b[17:-2
+                     ]+"	"
                 if a.count("	")>d:
                     d=a.count("	")
             elif a != "":
@@ -53,22 +54,18 @@ for a in added:
         e+=1
         #g=open("t.tsv","a")
         if e==1:
-            g.write((d-1)*"	")
-            for b in removed:
-                if "#" in b:
-                    g.write('	'+b[1:])
+            g.write(d*"	"+'found in')
     else:
         c=0
         g.write('''
-'''+a[:-1]+(d-a.count("  "))*"  ")
+'''+a+(d-a.count("	"))*"	")
         for b in removed:
             if a==b:
-                a=" "
+                g.write(f)
             if "#" in b:
+                f=b[1:]
                 c+=1
-                f="X"
-                if e>c or a==" ":
-                    f=" "
-                g.write('	'+f)
+                if e==c:
+                    g.write(f+"-")
 g.close()
 os.system("open -a Microsoft\ Excel t.tsv")
