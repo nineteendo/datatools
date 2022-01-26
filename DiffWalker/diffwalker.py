@@ -1,10 +1,10 @@
 import os
 added=[]
 removed=[]
-for dir in sorted(os.listdir()):
+for dir in os.listdir():
 	if os.path.isdir(dir):
 		current=[]
-		added.append(dir)
+		added.append(5*" "+dir)
 		c=d=e=0
 		for b in open(os.path.join(dir,"ZOMBIETYPES.json"),'r').readlines():
 #1st check
@@ -33,13 +33,12 @@ for a in added:
 		e+=1
 	else:
 		c=0
-		d+=1
 		for b in removed:
 			if a==b:
 				a=" "
 			if " " in b:
 				f=a
-				c+=1
 				if e>c:
 					f=" "
 				print(f)
+				e+=1
