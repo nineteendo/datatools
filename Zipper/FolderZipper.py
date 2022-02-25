@@ -1,5 +1,6 @@
-import zipfile, os, json, datetime
+import zipfile, os, json, datetime, sys, traceback
 options = {
+	"confirmPath": True,
 	"DEBUG_MODE": False,
 	"enteredPath": False
 }
@@ -11,35 +12,50 @@ def error_message(string):
 	fail.write(string + "\n")
 	print("\33[91m%s\33[0m" % string)
 
+def bold_input(text):
+	return input("\033[1m%s\033[0m: " % text)
+
 def path_input(text):
-	newstring = input(text)
-	if options["enteredPath"]:
-		return newstring
-	else:
-		string = ""
-		quoted = False
-		escaped = False
-		tempstring = ""
-		for char in newstring:
-			if escaped:
-				if char == '"' or not quoted and char in "\\ ":
+	string = ""
+	newstring = bold_input(text)
+	while newstring or string == "":
+		if options["enteredPath"]:
+			string = newstring
+		else:
+			string = ""
+			quoted = 0
+			escaped = False
+			tempstring = ""
+			for char in newstring:
+				if escaped:
+					if quoted != 1 and char == "'" or quoted != 2 and char == '"' or quoted == 0 and char in "\\ ":
+						string += tempstring + char
+					else:
+						string += tempstring + "\\" + char
+					
+					tempstring = ""
+					escaped = False
+				elif char == "\\":
+					escaped = True
+				elif quoted != 2 and char == "'":
+					quoted = 1 - quoted
+				elif quoted != 1 and char == '"':
+					quoted = 2 - quoted
+				elif quoted != 0 or char != " ":
 					string += tempstring + char
+					tempstring = ""
 				else:
-					string += tempstring + "\\" + char
-				
-				tempstring = ""
-				escaped = False
-			elif char == "\\":
-				escaped = True
-			elif char == '"':
-				quoted = not quoted
-			elif quoted or char != " ":
-				string += tempstring + char
-				tempstring = ""
-			else:
-				tempstring += " "
-		
-		return string
+					tempstring += " "
+
+		if string == "":
+			newstring = bold_input("\033[91mEnter a path")
+		else:
+			newstring = ""
+			string = os.path.realpath(string)
+			if options["confirmPath"]:
+				newstring = bold_input("Confirm \033[100m" + string)
+
+	return string
 
 def zip_folders(pathin):
 	for path in sorted(os.listdir(pathin)):
