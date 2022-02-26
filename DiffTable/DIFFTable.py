@@ -79,19 +79,21 @@ def path_input(text, full_path = True):
 
 	return string
 
-def add_version(data, keyz):
+def add_version(data, keyz, subkeyz, start, separator):
 	if isinstance(data, list):
 		for value in data:
-			add_version(value, keyz)
+			add_version(value, keyz, subkeyz, start, separator)
 	elif isinstance(data, dict):
 		for key, value in sorted(data.items()):
-			if keyz:
-				if keyz[0] == key:
-					add_version(value, keyz[1:])
-			else:
-				add_version(key, keyz)
+			if not keyz:
+				if not subkeyz:
+					add_version(value, keyz, subkeyz, start + ": " + repr(key), separator)
+				elif subkeyz[0] in data:
+					add_version(value, keyz, subkeyz[1:], start + separator + repr(data[subkeyz[0]]) + "	" + repr(key), "	")
+			elif keyz[0] == key:
+				add_version(value, keyz[1:], subkeyz, "", "")
 	elif keyz == []:
-		keys.setdefault(data, []).append(id)
+		keys.setdefault(start + separator + repr(data) + 2 * len(subkeyz) * "	", []).append(id)
 
 try:
 	system("")
@@ -122,9 +124,10 @@ try:
 	path = path_input("Enter directory")
 	sub_path = path_input("Enter sub path", False)
 	json_keys = list(input() for i in range(0, int(bold_input("How many keys"))))
+	json_sub_keys = list(input() for i in range(0, int(bold_input("How many sub keys"))))
 
 	file = open(osjoin(application_path, "changelog.tsv"), "w")
-	file.write("key")
+	file.write(len(json_sub_keys) * "ID	path	" + "key")
 	if options["foundIn"]:
 		file.write("	found in")
 
@@ -132,7 +135,7 @@ try:
 	ids = []
 	for id in sorted(sorted(listdir(path)), key = lambda key : len(key)):
 		try:
-			add_version(load(open(osjoin(path, id, sub_path), "r")), json_keys)
+			add_version(load(open(osjoin(path, id, sub_path), "r")), json_keys, json_sub_keys, "", "")
 			ids.append(id)
 			if not options["foundIn"]:
 				file.write("	" + id)
@@ -144,11 +147,13 @@ try:
 		if options["foundIn"]:
 			old_id = None
 			first_id = None
+			seperator = "	"
 			for id in ids:
 				if id in value:
 					if old_id == None:
 						first_id = id
-						file.write("	" + id)
+						file.write(seperator + id)
+						seperator = " & "
 					old_id = id
 				elif old_id != None:
 					if first_id != old_id:
