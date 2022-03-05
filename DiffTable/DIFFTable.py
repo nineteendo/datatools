@@ -79,21 +79,26 @@ def path_input(text, full_path = True):
 
 	return string
 
-def add_version(data, keyz, subkeyz, start, separator):
+def add_version(data, keyz, start, doublepoint):
 	if isinstance(data, list):
 		for value in data:
-			add_version(value, keyz, subkeyz, start, separator)
+			add_version(value, keyz, start, doublepoint)
 	elif isinstance(data, dict):
-		for key, value in sorted(data.items()):
-			if not keyz:
-				if not subkeyz:
-					add_version(value, keyz, subkeyz, start + ": " + repr(key), separator)
-				elif subkeyz[0] in data:
-					add_version(value, keyz, subkeyz[1:], start + separator + repr(data[subkeyz[0]]) + "	" + repr(key), "	")
-			elif keyz[0] == key:
-				add_version(value, keyz[1:], subkeyz, "", "")
+		add_dict(data, keyz, start, doublepoint)
 	elif keyz == []:
-		keys.setdefault(start + separator + repr(data) + 2 * len(subkeyz) * "	", []).append(id)
+		keys.setdefault(start + "	" + repr(data), []).append(id)
+
+def add_dict(data, keyz, start, doublepoint):
+	if keyz:
+		check, dict_key = keyz[0]
+		if check in data:
+			if dict_key:
+				add_dict(data, keyz[1:], start + repr(data[check]) + "	", "")
+			else:
+				add_version(data[check], keyz[1:], start, "")
+	else:
+		for key, value in sorted(data.items()):
+			add_version(value, [], start + doublepoint + repr(key), ": ")
 
 try:
 	system("")
@@ -123,11 +128,18 @@ try:
 	blue_print("Working directory: " + getcwd())
 	path = path_input("Enter directory")
 	sub_path = path_input("Enter sub path", False)
-	json_keys = list(input() for i in range(0, int(bold_input("How many keys"))))
-	json_sub_keys = list(input() for i in range(0, int(bold_input("How many sub keys"))))
+	json_keys = []
+	length = 0
+	for i in range(0, int(bold_input("How many json_keys"))):
+		key = bold_input("Key")
+		if "" == bold_input("Dict Key"):
+			json_keys.append((key, False))
+		else:
+			json_keys.append((key, True))
+			length += 1
 
 	file = open(osjoin(application_path, "changelog.tsv"), "w")
-	file.write(len(json_sub_keys) * "ID	path	" + "key")
+	file.write(length * "ID	" + "path	key")
 	if options["foundIn"]:
 		file.write("	found in")
 
@@ -135,7 +147,7 @@ try:
 	ids = []
 	for id in sorted(sorted(listdir(path)), key = lambda key : len(key)):
 		try:
-			add_version(load(open(osjoin(path, id, sub_path), "r")), json_keys, json_sub_keys, "", "")
+			add_version(load(open(osjoin(path, id, sub_path), "r")), json_keys, "", "")
 			ids.append(id)
 			if not options["foundIn"]:
 				file.write("	" + id)
