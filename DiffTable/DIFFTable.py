@@ -129,17 +129,16 @@ try:
 	path = path_input("Enter directory")
 	sub_path = path_input("Enter sub path", False)
 	json_keys = []
-	length = 0
+	file = open(osjoin(application_path, "changelog.tsv"), "w")
 	for i in range(0, int(bold_input("How many json_keys"))):
 		key = bold_input("Key")
 		if "" == bold_input("Dict Key"):
 			json_keys.append((key, False))
 		else:
 			json_keys.append((key, True))
-			length += 1
+			file.write(key + "	")
 
-	file = open(osjoin(application_path, "changelog.tsv"), "w")
-	file.write(length * "ID	" + "path	key")
+	file.write("path	key")
 	if options["foundIn"]:
 		file.write("	found in")
 
