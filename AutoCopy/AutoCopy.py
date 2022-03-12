@@ -3,14 +3,27 @@ from time import sleep
 from shutil import copyfile
 from traceback import format_exc
 from json import load, dump
-from os import makedirs, listdir, system, getcwd, sep, stat
-from os.path import isdir, isfile, realpath, join as osjoin, dirname, relpath, basename, splitext
+from os import system, stat
+from os.path import isdir, isfile, join as osjoin, dirname
+from hashlib import md5
+
+# Default options
 options = {
+	"cooldown": 9,
 	"DEBUG_MODE": False,
 	"files": {}
 }
 
+# Default times edited
 times = {}
+
+# Checksum for file
+def checksum(fname):
+	hash_md5 = md5()
+	with open(fname, "rb") as f:
+		for chunk in iter(lambda: f.read(4096), b""):
+			hash_md5.update(chunk)
+	return hash_md5.hexdigest()
 
 # Print & log error
 def error_message(string):
@@ -45,6 +58,7 @@ try:
 	except Exception as e:
 		error_message(type(e).__name__ + " in options.json: " + str(e))
 
+	cooldown = options["cooldown"]
 	try:
 		for key, value in load(open(osjoin(application_path, ".times.json"), "rb")).items():
 			if isinstance(value, float):
@@ -56,12 +70,19 @@ try:
 		for file, childs in options["files"].items():
 			time = stat(file).st_mtime
 			if not file in times or time != times[file]:
+				check = checksum(file)
 				for dst in childs:
-					copyfile(file, dst)
-					blue_print("wrote " + dst)
+					if isfile(dst):
+						if checksum(dst) != check:
+							copyfile(file, dst)
+							blue_print("wrote " + dst)
+					elif not isdir(dst):
+						copyfile(file, dst)
+						blue_print("wrote " + dst)
 				
 				times[file] = time
 				dump(times, open(osjoin(application_path, ".times.json"), "w"))
-		sleep(10)
+		sleep(1)
+		sleep(cooldown)
 except BaseException as e:
 	error_message(type(e).__name__ + " : " + str(e))
