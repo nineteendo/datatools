@@ -1,11 +1,9 @@
 import sys
 from time import sleep
-from shutil import copyfile
 from traceback import format_exc
 from json import load, dump
-from os import system, stat
+from os import system, stat, makedirs
 from os.path import isdir, isfile, join as osjoin, dirname
-from hashlib import md5
 
 # Default options
 options = {
@@ -16,14 +14,6 @@ options = {
 
 # Default times edited
 times = {}
-
-# Checksum for file
-def checksum(fname):
-	hash_md5 = md5()
-	with open(fname, "rb") as f:
-		for chunk in iter(lambda: f.read(4096), b""):
-			hash_md5.update(chunk)
-	return hash_md5.hexdigest()
 
 # Print & log error
 def error_message(string):
@@ -70,14 +60,19 @@ try:
 		for file, childs in options["files"].items():
 			time = stat(file).st_mtime
 			if not file in times or time != times[file]:
-				check = checksum(file)
-				for dst in childs:
+				#check = checksum(file)
+				data = open(file, "rb").read()
+				for dst, replaces in childs.items():
+					newdata = data
+					for key, value in replaces.items():
+						newdata = newdata.replace(key.encode(), value.encode())
 					if isfile(dst):
-						if checksum(dst) != check:
-							copyfile(file, dst)
+						if hash(open(dst, "rb").read()) != hash(newdata):
+							open(dst, "wb").write(newdata)
 							blue_print("wrote " + dst)
 					elif not isdir(dst):
-						copyfile(file, dst)
+						makedirs(dirname(dst), exist_ok = True)
+						open(dst, "wb").write(newdata)
 						blue_print("wrote " + dst)
 				
 				times[file] = time

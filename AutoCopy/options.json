@@ -2,8 +2,10 @@
 	"cooldown": 9,
 	"DEBUG_MODE": true,
 	"files": {
-		"/Users/wannes/Documents/GitHub/DataTools/AutoCopy/tests/test.txt": [
-			"/Users/wannes/Documents/GitHub/DataTools/AutoCopy/tests/test2.txt"
-		]
+		"/Users/wannes/Documents/GitHub/DataTools/AutoCopy/tests/test.txt": {
+			"/Users/wannes/Documents/GitHub/DataTools/AutoCopy/tests/test2.txt": {
+				"es": "us"
+			}
+		}
 	}
 }
